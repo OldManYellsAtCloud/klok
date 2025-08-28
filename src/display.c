@@ -15,6 +15,15 @@ static int CHAR_POSITIONS[] = {5, 80, 155, 170, 245};
 
 static void *buf;
 
+static void display_blank_whole_screen(){
+    memset(buf, 0, BUFFER_HEIGHT * BUFFER_WIDTH * sizeof(uint16_t));
+    for (size_t row = 0; row < 320; row += BUFFER_HEIGHT) {
+        for (size_t col = 0; col < 240; col += BUFFER_WIDTH) {
+            display_write(display_dev, col, row, buf_desc, buf);
+        }
+    }
+}
+
 void display_setup(){
     display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     if (!device_is_ready(display_dev)) {
@@ -35,6 +44,8 @@ void display_setup(){
         LOG_ERR("Not enough memory!");
         return;
     }
+
+    display_blank_whole_screen();
 
     display_blanking_off(display_dev);
 }
@@ -78,6 +89,8 @@ static inline void display_fill_buffer(uint8_t char_slice, struct char_with_widt
  * Draw a character bitmap on the screen at a given position.
  * The third, middle position is narrow, only 10 pixels wide.
  * Positions 1, 2, 4, and 5 are 70 pixels wide.
+ * 
+ * For now display text only in the middle of the screen.
  */
 void display_draw_character(uint8_t position, struct char_with_width *character){
     for (int char_slice = 0; char_slice < character->width; ++char_slice){
