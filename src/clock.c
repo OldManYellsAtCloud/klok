@@ -5,6 +5,8 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/display.h>
 
+#include <zephyr/drivers/gpio.h>
+
 #include "display.h"
 #include "characters.h"
 
@@ -18,6 +20,9 @@ LOG_MODULE_REGISTER(clock);
 
 K_THREAD_STACK_DEFINE(clock_stack_area, STACKSIZE);
 struct k_thread clock_thread_data;
+
+const struct device *TEST_gpio_dev = DEVICE_DT_GET(DT_NODELABEL(gpioc));
+
 
 static void clock_timer_handler(){
     uint32_t uptime;
@@ -38,11 +43,13 @@ static void clock_timer_handler(){
 
         display_draw_character(2, &chars[NO_COLON_IDX]);
         k_msleep(500);
+        LOG_INF("gpio value: %d", gpio_pin_get(TEST_gpio_dev, 1));
     }
 }
 
 
 void clock_setup(void){
+    gpio_pin_configure(TEST_gpio_dev, 1, GPIO_INPUT);
     k_thread_create(&clock_thread_data, clock_stack_area, K_THREAD_STACK_SIZEOF(clock_stack_area),
                     clock_timer_handler, NULL, NULL, NULL, PRIORITY, 0, K_NO_WAIT);
 }
